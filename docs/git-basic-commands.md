@@ -662,8 +662,13 @@ git push
 git switch main
 git pull
 git switch -c feature-name
+```
+如果不先 git pull，你的本地 main 可能落后于 GitHub 上的 main。这时你从旧的 main 创建分支，后面合并时更容易出现冲突，或者你的分支缺少远程已经有的文件。
+
 
 # 修改文件
+
+```bash
 git add .
 git commit -m "add feature"
 git push -u origin feature-name
@@ -678,8 +683,177 @@ git switch main
 git pull
 git branch -d feature-name
 ```
+标准流程是：
+```text
+main 分支
+  ↓
+开一个 feature 分支
+  ↓
+在 feature 分支开发
+  ↓
+push feature 分支到 GitHub
+  ↓
+在 GitHub 网页上创建 Pull Request
+  ↓
+检查改动、写说明、看 diff
+  ↓
+确认没问题后 merge 到 main
+```
+作用：
+```text
+1. 让别人 review 你的代码
+2. 让你自己检查 diff
+3. 保留改动说明和讨论记录
+4. 触发自动测试
+5. 避免 main 被随便改坏
+```
 
-## 18. 最小必记命令
+## 18. 改乱了想回退的流程
+
+先看当前状态：
+
+```bash
+git status
+```
+
+### 18.1 只是本地改乱了，还没有 commit
+
+丢弃某个文件的未提交改动：
+
+```bash
+git restore README.md
+```
+
+丢弃所有已跟踪文件的未提交改动：
+
+```bash
+git restore .
+```
+
+如果有新建但未被 Git 跟踪的文件，`git restore .` 不会删除它们。
+
+查看未跟踪文件：
+
+```bash
+git status
+```
+
+删除所有未跟踪文件和目录：
+
+```bash
+git clean -fd
+```
+
+注意：
+
+```text
+git clean -fd 会直接删除未跟踪文件，执行前要确认这些文件不需要保留。
+```
+
+### 18.2 已经 commit 了，但还没有 push
+
+撤销最近一次 commit，但保留为已暂存状态：
+
+```bash
+git reset --soft HEAD~1
+```
+
+撤销最近一次 commit，文件改动保留在工作区：
+
+```bash
+git reset --mixed HEAD~1
+```
+
+彻底丢弃最近一次 commit 和对应改动：
+
+```bash
+git reset --hard HEAD~1
+```
+
+注意：
+
+```text
+git reset --hard 会丢弃改动。使用前先确认不需要这些内容。
+```
+
+### 18.3 想回到远程分支最新状态
+
+适用场景：
+
+```text
+本地改乱了，想让当前分支完全回到 GitHub 上的最新状态。
+```
+
+先获取远程信息：
+
+```bash
+git fetch origin
+```
+
+如果当前分支是 `main`：
+
+```bash
+git reset --hard origin/main
+```
+
+如果当前分支是 `feature/llm-backend-starter`：
+
+```bash
+git reset --hard origin/feature/llm-backend-starter
+```
+
+注意：
+
+```text
+这会丢弃本地未 push 的 commit 和未提交改动。
+```
+
+### 18.4 推荐提交和 push 节奏
+
+推荐原则：
+
+```text
+小步 commit，阶段性 push。
+```
+
+不要每改一行就 push，也不要等整个项目全部写完才 commit。
+
+推荐流程：
+
+```bash
+# 完成一个小功能
+git status
+git add .
+git commit -m "add health endpoint"
+git push
+```
+
+然后继续下一个小功能：
+
+```bash
+git add .
+git commit -m "add summarize schema"
+git push
+```
+
+这样做的好处：
+
+- 改乱了可以回到上一个 commit。
+- 电脑出问题时 GitHub 上有备份。
+- PR diff 更小，更容易检查。
+- 开发历史更清楚。
+
+推荐 commit 粒度：
+
+```text
+commit 1: add project scaffold
+commit 2: add health endpoint
+commit 3: add summarize function
+commit 4: add pydantic schemas
+commit 5: add README usage
+```
+
+## 19. 最小必记命令
 
 ```bash
 git status
@@ -693,4 +867,3 @@ git merge branch-name
 git log --oneline
 git diff
 ```
-
